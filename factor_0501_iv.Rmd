@@ -1,0 +1,230 @@
+---
+title: "Alert data - Updated with reverse coding"
+author: "Kevin"
+date: "3/30/2020"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+# Independent variables factors, plots and scores
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#all needed libraries for factor analysis
+library(tinytex)
+library(MASS)
+library(car)
+library(GPArotation)
+library(psych)
+library(tidyverse)
+library(haven)
+library(lme4)
+library(knitr)
+
+
+```
+
+
+
+```{r Alert data, echo=FALSE, warning=FALSE, message=FALSE}
+#data cleaning
+raw_check <- read_csv("/Users/kkwiley/alert_0328.csv")
+
+
+raw_check[raw_check == 11] <- NA
+raw_check <- lapply(raw_check, as.numeric)#changing from string to numeric
+raw_check <- as.data.frame(raw_check)
+
+#reverse coding questions 11
+raw_check$q11 <- 6 - raw_check$q11
+raw_check$q11[raw_check$q11 == 0] <- 6
+
+#reverse coding questions 12
+raw_check$q12 <- 6 - raw_check$q12
+raw_check$q12[raw_check$q12 == 0] <- 6
+
+#reverse coding questions 20
+raw_check$q20 <- 6 - raw_check$q20
+raw_check$q20[raw_check$q20 == 0] <- 6
+
+#reverse coding questions 21
+raw_check$q21 <- 6 - raw_check$q21
+raw_check$q21[raw_check$q21 == 0] <- 6
+
+#reverse coding questions 53
+raw_check$q53 <- 6 - raw_check$q53
+raw_check$q53[raw_check$q53 == 0] <- 6
+
+#reverse coding questions 55
+raw_check$q55 <- 6 - raw_check$q55
+raw_check$q55[raw_check$q55 == 0] <- 6
+
+#reverse coding questions 56
+raw_check$q56 <- 6 - raw_check$q56
+raw_check$q56[raw_check$q56 == 0] <- 6
+
+#reverse coding questions 57
+raw_check$q57 <- 6 - raw_check$q57
+raw_check$q57[raw_check$q57 == 0] <- 6
+
+```
+
+
+```{r independent variables, echo=FALSE, warning=FALSE}
+#scree plot with independent variables
+ch_aw_alert_scree <- fa.parallel(raw_check[c(6:30, 89:93)], fm = 'minres', fa = 'fa')
+
+#analysis with print outs of factor loadings
+ch_raw_loadings_IV <- fa(raw_check[c(6:30, 89:93)], nfactors=5, rotate = "oblimin", fm="minres")
+
+print(ch_raw_loadings_IV)
+print(ch_raw_loadings_IV$loadings,cutoff = 0.3)
+
+#diagram
+fa.diagram(ch_raw_loadings_IV)
+```
+
+
+# Dependent variable factors, plots and scores
+
+```{r DVs for factors, echo=FALSE, warning=FALSE}
+#scree plot with independent variables
+ch_DVraw_alert_scree <- fa.parallel(raw_check[31:40], fm = 'minres', fa = 'fa')
+
+#analysis with print outs of factor loadings
+ch_DVraw_loadings <- fa(raw_check[31:40], nfactors=2, rotate = "oblimin", fm="minres")
+
+print(ch_DVraw_loadings)
+print(ch_DVraw_loadings$loadings,cutoff = 0.3)
+
+#diagram
+fa.diagram(ch_DVraw_loadings)
+
+#combining scores to dataset
+
+ch_raw_scores_IV <- ch_raw_loadings_IV$scores#creating scores dataset from IV scores
+ch_raw_scores_DV <- ch_DVraw_loadings$scores#creating scores dataset from DV scores
+ch_raw_alert2 <- cbind(ch_raw_scores_IV, ch_raw_scores_DV)#combining DV and IV scores
+
+ch_raw_alert_final <- cbind(raw_check, ch_raw_alert2)#combining for final dataset
+#changing variable names
+colnames(ch_raw_alert_final)[113] <- "Staff_percep"
+colnames(ch_raw_alert_final)[114] <- "Perc_org_cap"
+colnames(ch_raw_alert_final)[115] <- "Sup_pol_proc"
+colnames(ch_raw_alert_final)[116] <- "Consent_proc"
+colnames(ch_raw_alert_final)[117] <- "Per_event_notcap"
+colnames(ch_raw_alert_final)[118] <- "Care_qual"
+colnames(ch_raw_alert_final)[119] <- "Care_coord"
+
+alert_0330 <- ch_raw_alert_final
+
+```
+
+
+
+
+### Regressions are run with only one independent variable 
+
+###Care Quality regressed on Staff Perceptions
+
+```{r regression analyses - IV1, echo=FALSE}
+
+raw_lm <- lm(Care_qual ~ Staff_percep, data = alert_0330)
+summary(raw_lm)
+```
+
+### Care Quality regressed on Perceived Organizational Capacity
+```{r regression analyses - IV2, echo=FALSE}
+
+raw_lm2 <- lm(Care_qual ~ Perc_org_cap, data = alert_0330)
+summary(raw_lm2)
+```
+### Care Quality regressed on Supportive Policies and Procedures
+```{r regression analyses - IV3, echo=FALSE}
+
+raw_lm3 <- lm(Care_qual ~ Sup_pol_proc, data = alert_0330)
+summary(raw_lm3)
+```
+### Care Quality regressed on Consent procedures
+```{r regression analyses - IV4, echo=FALSE}
+
+raw_lm4 <- lm(Care_qual ~ Consent_proc, data = alert_0330)
+summary(raw_lm4)
+```
+### Care Quality regressed on Percived event notification capacity
+```{r regression analyses - IV5, echo=FALSE}
+
+raw_lm5 <- lm(Care_qual ~ Per_event_notcap, data = alert_0330)
+summary(raw_lm5)
+```
+
+### Care Coordination regressed on Staff perceptions
+```{r regression analyses - DV2 & IV1, echo=FALSE}
+
+lmd1 <- lm(Care_coord ~ Staff_percep, data = alert_0330)
+summary(lmd1)
+```
+### Care Coordination regressed on Perceived Organizational Capacity
+```{r regression analyses - DV2 & IV2, echo=FALSE}
+
+lmd2 <- lm(Care_coord ~ Perc_org_cap, data = alert_0330)
+summary(lmd2)
+```
+### Care Coordination regressed on Supportive Policies and Procedures
+```{r regression analyses - Care_Coord & IV3, echo=FALSE}
+
+lmd3 <- lm(Care_coord ~ Sup_pol_proc, data = alert_0330)
+summary(lmd3)
+```
+### Care Coordination regressed on Consent Procedures
+```{r regression analyses - Care_Coord & IV4, echo=FALSE}
+
+lmd4 <- lm(Care_coord ~ Consent_proc, data = alert_0330)
+summary(lmd4)
+```
+### Care Coordination regressed on Perceived Event Notification Capacity
+```{r regression analyses - DV2 & IV5, echo=FALSE}
+
+lmd5 <- lm(Care_coord ~ Per_event_notcap, data = alert_0330)
+summary(lmd5)
+```
+
+#Random effects regression clustering on organization - Care Quality
+```{r}
+###GLMM mixsed effects model
+re_glm <- lmer(Care_qual ~ Staff_percep + Perc_org_cap + Sup_pol_proc + Consent_proc + Per_event_notcap  + (1| org_id) + (1 | QE), data = alert_0330)
+summary(re_glm)
+
+```
+#random effects and pvalues for Care Quality
+
+```{r}
+# extract coefficients
+coefs <- data.frame(coef(summary(re_glm)))
+# use normal distribution to approximate p-value
+coefs$p.z <- 2 * (1 - pnorm(abs(coefs$t.value)))
+format(round(coefs, 4))
+```
+
+#Random effects regression clustering on organization - Care Coordination
+```{r}
+#Random effects regression clustering on organization
+###GLMM mixsed effects model
+re_glm2 <- lmer(Care_coord ~ Staff_percep + Perc_org_cap + Sup_pol_proc + Consent_proc + Per_event_notcap + (1| org_id) + (1 | QE) , data = alert_0330)
+summary(re_glm2)
+```
+
+#random effects and pvalues for Care Coordination
+```{r}
+#random effects and pvalues for DV2
+# extract coefficients
+coefs2 <- data.frame(coef(summary(re_glm2)))
+# use normal distribution to approximate p-value
+coefs2$p.z <- 2 * (1 - pnorm(abs(coefs2$t.value)))
+format(round(coefs2, 4))
+```
+
+
+
+
+
